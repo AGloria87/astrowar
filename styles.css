@@ -1,0 +1,19 @@
+*{
+    border: 0;
+    margin: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background-color: #808080;
+}
+
+.container{
+    text-align: center;
+}
+
+canvas {
+    width: 800px;
+    height: 950px;
+    margin: auto;
+}
