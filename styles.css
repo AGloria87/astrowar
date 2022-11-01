@@ -1,4 +1,4 @@
-*{
+* {
     border: 0;
     margin: 0;
     box-sizing: border-box;
@@ -13,7 +13,6 @@ body {
 }
 
 canvas {
-    width: 800px;
-    height: 950px;
     margin: auto;
+    border: 1px solid black;
 }
