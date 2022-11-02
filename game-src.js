@@ -173,31 +173,36 @@ class UI {
     this.ctx = ctx;
     this.posX = posX;
     this.posY = posY;
-    this.height = 30;
+    this.height = 20;
   }
 
   drawHPBar(){
-    this.ctx.fillStyle = "black";
+    this.ctx.fillStyle = "#222";
     this.ctx.fillRect(this.posX, this.posY, 200, this.height)
-    if(player.hp > 75){
+    if (player.hp > 75){
       this.ctx.fillStyle = "limegreen";
     }
-    else if(player.hp > 50){
+    else if (player.hp > 50){
       this.ctx.fillStyle = "yellow";
     }
-    else if(player.hp > 25){
+    else if (player.hp > 25){
       this.ctx.fillStyle = "orange";
     }
-    else if(player.hp > 0){
+    else if (player.hp > 0){
       this.ctx.fillStyle = "red";
     }
     this.ctx.fillRect(this.posX, this.posY, player.hp*2, this.height)
+    this.ctx.strokeStyle = "#444";
+    this.ctx.lineWidth = "3";
+    this.ctx.strokeRect(this.posX, this.posY, 200, this.height);
   }
 
   drawScore() {
     this.ctx.fillStyle = "white";
-    this.ctx.font = "40pt Arial";
-    this.ctx.fillText(player.score, canvasW/2 + 200, this.posY+40)
+    this.ctx.font = "20pt Zekton";
+    let scoreDisplay = String(player.score).padStart(3, '0')
+    let txt = `Score: ${scoreDisplay}`
+    this.ctx.fillText(txt, canvasW/2 + 230, this.posY + 20)
   }
 }
 
@@ -230,7 +235,10 @@ const playerUI = new UI(ctx, 40, 40);
 // Interval managing drawing and real-time events
 const gamePlay = setInterval(() => {
   if (player.hp <= 0) {
-    alert("YA PETATIO :C")
+    alert("YA PETATEO :C")
+  }
+  if (player.score >= 2000) {
+    alert("YA GANO :D")
   }
 
   // Drawing logic
@@ -248,6 +256,14 @@ const gamePlay = setInterval(() => {
   }
 
   playerShots.forEach((shot, idxPShot) => {
+    enemiesA.forEach((enemy, idxEnemyA)=> {
+      if (checkCollision(shot, enemy)) {
+        player.score += 50;
+        enemiesA.splice(idxEnemyA, 1);
+        playerShots.splice(idxPShot, 1);
+      }
+    })
+
     if (shot.posY + shot.sprite.height < 0) {
       playerShots.splice(idxPShot, 1);
       shot = null;
@@ -260,12 +276,12 @@ const gamePlay = setInterval(() => {
     }
   });
 
-  enemiesA.forEach((enemy, idxEnemyA) => {
+  enemiesA.forEach((enemy, idx) => {
     if (checkCollision(player, enemy) || enemy.posY > canvasH) {
       if (checkCollision(player, enemy)) {
         player.hp -= 20;
       }
-      enemiesA.splice(idxEnemyA, 1);
+      enemiesA.splice(idx, 1);
       enemy = null;
       delete enemy;
     }
