@@ -1,12 +1,39 @@
 const canvas = document.querySelector("canvas");
-const canvasW = 800;
-const canvasH = 950;
+const canvasW = canvas.width;
+const canvasH = canvas.height;
 
 const ctx = canvas.getContext("2d");
 
+// Background Image
+const bgImg = new Image();
+bgImg.src = "./img/ui/background.png";
+
+const backgroundImage = {
+  img: bgImg,
+  x: 0,
+  y: 0,
+  speed: 3,
+
+  move: function() {
+    this.y += this.speed;
+    this.y %= canvasH;
+  },
+
+  draw: function() {
+    ctx.drawImage(this.img, 0, this.y);
+    if (this.speed < 0) {
+      ctx.drawImage(this.img, 0, this.y + this.img.height);
+    }
+    else {
+      ctx.drawImage(this.img, 0, this.y - canvasH);
+    }
+  },
+};
+
 const playerShots = [];
-const enemies = [];
-const enemyShots = []
+const enemiesA = [];
+const enemiesB = [];
+const enemyShots = [];
 
 // Player Images
 const playerF0 = new Image();
@@ -111,6 +138,8 @@ class Player extends Entity {
   constructor(sprite, posX, posY) {
     super(sprite, posX, posY);
     this.hp = 100;
+    this.score = 0;
+    this.canShoot = true;
   }
 
   shoot() {
@@ -139,13 +168,53 @@ class EnemyA extends Entity {
   }
 }
 
+class UI {
+  constructor(ctx, posX, posY) {
+    this.ctx = ctx;
+    this.posX = posX;
+    this.posY = posY;
+    this.height = 30;
+  }
+
+  drawHPBar(){
+    this.ctx.fillStyle = "black";
+    this.ctx.fillRect(this.posX, this.posY, 200, this.height)
+    if(player.hp > 75){
+      this.ctx.fillStyle = "limegreen";
+    }
+    else if(player.hp > 50){
+      this.ctx.fillStyle = "yellow";
+    }
+    else if(player.hp > 25){
+      this.ctx.fillStyle = "orange";
+    }
+    else if(player.hp > 0){
+      this.ctx.fillStyle = "red";
+    }
+    this.ctx.fillRect(this.posX, this.posY, player.hp*2, this.height)
+  }
+
+  drawScore() {
+    this.ctx.fillStyle = "white";
+    this.ctx.font = "40pt Arial";
+    this.ctx.fillText(player.score, canvasW/2 + 200, this.posY+40)
+  }
+}
+
+function checkCollision(entityA, entityB) {
+  return (entityA.getBoundRight() >= entityB.posX &&
+          entityA.getBoundBottom() >= entityB.posY &&
+          entityA.posY <= entityB.getBoundBottom() &&
+          entityA.posX <= entityB.getBoundRight());
+}
+
 // Enemy functions
 function spawnEnemyA() {
   let sprite = new Sprite(ctx, enemyAFrames);
   let enemyX = Math.floor(Math.random() * (canvasW-sprite.width));
   let enemy = new EnemyA(sprite, enemyX, -sprite.height);
   enemy.setSpeed(5);
-  enemies.push(enemy)
+  enemiesA.push(enemy)
   return enemy;
 }
 
@@ -154,22 +223,23 @@ const playerSprite = new Sprite(ctx, playerFrames);
 const playerSpawnX = (canvasW - playerSprite.width) / 2;
 const playerSpawnY = playerSprite.height + 650;
 const player = new Player(playerSprite, playerSpawnX, playerSpawnY);
-player.setSpeed(10);
+player.setSpeed(15);
+
+const playerUI = new UI(ctx, 40, 40);
 
 // Interval managing drawing and real-time events
 const gamePlay = setInterval(() => {
-  ctx.clearRect(0, 0, canvasW, canvasH)
-  player.sprite.draw(player.posX, player.posY);
+  if (player.hp <= 0) {
+    alert("YA PETATIO :C")
+  }
 
-  playerShots.forEach(shot => {
-    shot.sprite.draw(shot.posX, shot.posY);
-    shot.moveUp();
-    if (shot.posY + shot.sprite.height < 0) {
-      playerShots.splice(playerShots.indexOf(shot), 1);
-      shot = null;
-      delete shot;
-    }
-  });
+  // Drawing logic
+  ctx.clearRect(0, 0, canvasW, canvasH)
+
+  backgroundImage.draw();
+  backgroundImage.move();
+
+  player.sprite.draw(player.posX, player.posY);
 
   let spawnChanceEnemyA = Math.floor(Math.random() * 100)
   if (spawnChanceEnemyA > 97) {
@@ -177,56 +247,97 @@ const gamePlay = setInterval(() => {
     enemy.shoot();
   }
 
-  enemies.forEach(enemy => {
-    enemy.sprite.draw(enemy.posX, enemy.posY);
-    enemy.moveDown();
-    if (enemy.posY > canvasH) {
-      enemies.splice(enemies.indexOf(enemy), 1);
-      enemy = null;
-      delete enemy;
-    }
-  });
-
-  enemyShots.forEach(shot => {
-    shot.sprite.draw(shot.posX, shot.posY);
-    shot.moveDown();
-    if (shot.posY > canvasH) {
-      enemyShots.splice(enemyShots.indexOf(shot), 1);
+  playerShots.forEach((shot, idxPShot) => {
+    if (shot.posY + shot.sprite.height < 0) {
+      playerShots.splice(idxPShot, 1);
       shot = null;
       delete shot;
     }
+
+    else {
+      shot.sprite.draw(shot.posX, shot.posY);
+      shot.moveUp();
+    }
   });
+
+  enemiesA.forEach((enemy, idxEnemyA) => {
+    if (checkCollision(player, enemy) || enemy.posY > canvasH) {
+      if (checkCollision(player, enemy)) {
+        player.hp -= 20;
+      }
+      enemiesA.splice(idxEnemyA, 1);
+      enemy = null;
+      delete enemy;
+    }
+    else {
+      enemy.sprite.draw(enemy.posX, enemy.posY);
+      enemy.moveDown();
+    }
+  });
+
+  enemyShots.forEach((shot, idx) => {
+    if (checkCollision(player, shot) || shot.posY > canvasH) {
+      if (checkCollision(player, shot)) {
+        player.hp -= 10;
+      }
+      enemyShots.splice(idx, 1);
+      shot = null;
+      delete shot;
+    }
+
+    else {
+      shot.sprite.draw(shot.posX, shot.posY);
+      shot.moveDown();
+    }
+  });
+
+  // UI Elements
+  playerUI.drawHPBar()
+  playerUI.drawScore()
+
 },1000/60);
 
 // Player Controls
-window.addEventListener("keydown", (event, canShoot) => {
-  switch (event.code) {
-    case "ArrowRight":
-      if (player.getBoundRight() < canvasW) {
-        player.moveRight();
-      }
-      break;
+let keysPressed = {}
 
-    case "ArrowLeft":
-      if (player.posX > 0) {
-        player.moveLeft();
-      }
-      break;
+window.addEventListener("keydown", event => {
+  keysPressed[event.code] = true;
 
-    case "ArrowUp":
-      if (player.posY > 0) {
-        player.moveUp();
-      }
-      break;
+  if (keysPressed["ArrowRight"]) {
+    if (player.getBoundRight() < canvasW) {
+      player.moveRight();
+    }
+  }
 
-    case "ArrowDown":
-      if (player.getBoundBottom() < canvasH) {
-        player.moveDown();
-      }
-      break;
+  if (keysPressed["ArrowLeft"]) {
+    if (player.posX > 0) {
+      player.moveLeft();
+    }
+  }
 
-    case "KeyZ":
+  if (keysPressed["ArrowUp"]) {
+    if (player.posY > 0) {
+      player.moveUp();
+    }
+  }
+
+  if (keysPressed["ArrowDown"]){
+    if (player.getBoundBottom() < canvasH) {
+      player.moveDown();
+    }
+  }
+
+  if (keysPressed["KeyZ"]) {
+    if(player.canShoot){
       player.shoot();
-      break;
+      player.canShoot = false
+      const playersRecoil = setInterval(() => {
+        player.canShoot = true;
+      },500);
+    }
   }
 });
+
+window.addEventListener("keyup", event => {
+  delete keysPressed[event.code];
+})
