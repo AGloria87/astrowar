@@ -5,8 +5,8 @@ base color: dodgerblue
 highlights: turquoise
 darker: rgb(14, 54, 94)
 font default: white
-
 */
+
 * {
     border: 0;
     margin: 0;
@@ -20,7 +20,9 @@ html {
 }
 
 body {
-    background-color: #333;
+    background-image: url("./img/ui/browser-background.png");
+    background-size: cover;
+    background-repeat: no-repeat;
 }
 
 p {
@@ -74,7 +76,7 @@ canvas {
 }
 
 .menu-options a:hover {
-    background-image: linear-gradient(dodgerblue,turquoise,dodgerblue);
+    background-image: linear-gradient(#1e90ff,turquoise,dodgerblue);
     border: 1px solid white;
     box-shadow:
     0 0 2px 2px turquoise,
@@ -102,7 +104,7 @@ canvas {
     border: 12px solid midnightblue;
     text-align: center;
     padding: 10px;
-    background-color: rgba(30, 143, 255, 0.5);
+    background-color: rgba(30, 143, 255, 0.6);
 }
 
 .modal p {

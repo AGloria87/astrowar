@@ -289,7 +289,7 @@ function startGame() {
     playerShots.forEach((shot, idxPShot) => {
       enemiesA.forEach((enemy, idxEnemyA)=> {
         if (checkCollision(shot, enemy)) {
-          player.score += 50;
+          player.score += 150;
           enemiesA.splice(idxEnemyA, 1);
           playerShots.splice(idxPShot, 1);
         }
