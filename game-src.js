@@ -2,7 +2,19 @@ const canvas = document.querySelector("canvas");
 const canvasW = canvas.width;
 const canvasH = canvas.height;
 
+let gamePaused = false;
+let gamePlayID;
+
+// Modals
+const pauseModal = document.querySelector("#pause");
+const winModal = document.querySelector("#win");
+const loseModal = document.querySelector("#lose");
+
 const ctx = canvas.getContext("2d");
+
+ctx.font = "20pt Zekton";
+const playerIcon = new Image();
+playerIcon.src = "./img/ui/favicon.png";
 
 // Background Image
 const bgImg = new Image();
@@ -50,7 +62,7 @@ playerF3.src = "./img/sprites/player/default/player_03.png";
 playerF4.src = "./img/sprites/player/default/player_04.png";
 playerF5.src = "./img/sprites/player/default/player_05.png";
 
-const playerFrames = [playerF0, playerF1, playerF2, playerF3, playerF4, playerF5]
+const playerFrames = [playerF0, playerF1, playerF2, playerF3, playerF4, playerF5];
 
 const playerShotImg = new Image();
 playerShotImg.src = "./img/sprites/player/playerShot.png";
@@ -70,7 +82,7 @@ enemyAF3.src = "./img/sprites/enemyA/default/enemyA_03.png";
 enemyAF4.src = "./img/sprites/enemyA/default/enemyA_04.png";
 enemyAF5.src = "./img/sprites/enemyA/default/enemyA_05.png";
 
-const enemyAFrames = [enemyAF0, enemyAF1, enemyAF2, enemyAF3, enemyAF4, enemyAF5]
+const enemyAFrames = [enemyAF0, enemyAF1, enemyAF2, enemyAF3, enemyAF4, enemyAF5];
 const enemyAShotImg = new Image();
 enemyAShotImg.src = "./img/sprites/enemyA/enemyAShot.png";
 
@@ -177,8 +189,10 @@ class UI {
   }
 
   drawHPBar(){
+    let hpBarOffset = 42;
     this.ctx.fillStyle = "#222";
-    this.ctx.fillRect(this.posX, this.posY, 200, this.height)
+    this.ctx.fillRect(this.posX + hpBarOffset, this.posY, 200, this.height);
+    this.ctx.drawImage(playerIcon, this.posX, this.posY - 6);
     if (player.hp > 75){
       this.ctx.fillStyle = "limegreen";
     }
@@ -191,18 +205,34 @@ class UI {
     else if (player.hp > 0){
       this.ctx.fillStyle = "red";
     }
-    this.ctx.fillRect(this.posX, this.posY, player.hp*2, this.height)
+
+    this.ctx.fillRect(this.posX + hpBarOffset, this.posY, player.hp*2, this.height);
     this.ctx.strokeStyle = "#444";
     this.ctx.lineWidth = "3";
-    this.ctx.strokeRect(this.posX, this.posY, 200, this.height);
+    this.ctx.strokeRect(this.posX + hpBarOffset, this.posY, 200, this.height);
   }
 
   drawScore() {
     this.ctx.fillStyle = "white";
-    this.ctx.font = "20pt Zekton";
     let scoreDisplay = String(player.score).padStart(3, '0')
     let txt = `Score: ${scoreDisplay}`
     this.ctx.fillText(txt, canvasW/2 + 230, this.posY + 20)
+  }
+}
+
+function togglePause() {
+  if (!gamePaused) {
+    clearInterval(gamePlayID);
+    document.title = "AstroWar - Paused";
+    pauseModal.style.display = "block";
+    gamePaused = true;
+  }
+
+  else {
+    startGame();
+    document.title = "AstroWar - Playing"
+    pauseModal.style.display = "none";
+    gamePaused = false;
   }
 }
 
@@ -233,85 +263,89 @@ player.setSpeed(15);
 const playerUI = new UI(ctx, 40, 40);
 
 // Interval managing drawing and real-time events
-const gamePlay = setInterval(() => {
-  if (player.hp <= 0) {
-    alert("YA PETATEO :C")
-  }
-  if (player.score >= 2000) {
-    alert("YA GANO :D")
-  }
+function startGame() {
+  gamePlayID = setInterval(() => {
+    if (player.hp <= 0) {
+      alert("YA PETATEO :C")
+    }
+    if (player.score >= 2000) {
+      alert("YA GANO :D")
+    }
 
-  // Drawing logic
-  ctx.clearRect(0, 0, canvasW, canvasH)
+    // Drawing logic
+    ctx.clearRect(0, 0, canvasW, canvasH)
 
-  backgroundImage.draw();
-  backgroundImage.move();
+    backgroundImage.draw();
+    backgroundImage.move();
 
-  player.sprite.draw(player.posX, player.posY);
+    player.sprite.draw(player.posX, player.posY);
 
-  let spawnChanceEnemyA = Math.floor(Math.random() * 100)
-  if (spawnChanceEnemyA > 97) {
-    let enemy = spawnEnemyA();
-    enemy.shoot();
-  }
+    let spawnChanceEnemyA = Math.floor(Math.random() * 100)
+    if (spawnChanceEnemyA > 97) {
+      let enemy = spawnEnemyA();
+      enemy.shoot();
+    }
 
-  playerShots.forEach((shot, idxPShot) => {
-    enemiesA.forEach((enemy, idxEnemyA)=> {
-      if (checkCollision(shot, enemy)) {
-        player.score += 50;
-        enemiesA.splice(idxEnemyA, 1);
+    playerShots.forEach((shot, idxPShot) => {
+      enemiesA.forEach((enemy, idxEnemyA)=> {
+        if (checkCollision(shot, enemy)) {
+          player.score += 50;
+          enemiesA.splice(idxEnemyA, 1);
+          playerShots.splice(idxPShot, 1);
+        }
+      })
+
+      if (shot.posY + shot.sprite.height < 0) {
         playerShots.splice(idxPShot, 1);
+        shot = null;
+        delete shot;
       }
-    })
 
-    if (shot.posY + shot.sprite.height < 0) {
-      playerShots.splice(idxPShot, 1);
-      shot = null;
-      delete shot;
-    }
-
-    else {
-      shot.sprite.draw(shot.posX, shot.posY);
-      shot.moveUp();
-    }
-  });
-
-  enemiesA.forEach((enemy, idx) => {
-    if (checkCollision(player, enemy) || enemy.posY > canvasH) {
-      if (checkCollision(player, enemy)) {
-        player.hp -= 20;
+      else {
+        shot.sprite.draw(shot.posX, shot.posY);
+        shot.moveUp();
       }
-      enemiesA.splice(idx, 1);
-      enemy = null;
-      delete enemy;
-    }
-    else {
-      enemy.sprite.draw(enemy.posX, enemy.posY);
-      enemy.moveDown();
-    }
-  });
+    });
 
-  enemyShots.forEach((shot, idx) => {
-    if (checkCollision(player, shot) || shot.posY > canvasH) {
-      if (checkCollision(player, shot)) {
-        player.hp -= 10;
+    enemiesA.forEach((enemy, idx) => {
+      if (checkCollision(player, enemy) || enemy.posY > canvasH) {
+        if (checkCollision(player, enemy)) {
+          player.hp -= 20;
+        }
+        enemiesA.splice(idx, 1);
+        enemy = null;
+        delete enemy;
       }
-      enemyShots.splice(idx, 1);
-      shot = null;
-      delete shot;
-    }
+      else {
+        enemy.sprite.draw(enemy.posX, enemy.posY);
+        enemy.moveDown();
+      }
+    });
 
-    else {
-      shot.sprite.draw(shot.posX, shot.posY);
-      shot.moveDown();
-    }
-  });
+    enemyShots.forEach((shot, idx) => {
+      if (checkCollision(player, shot) || shot.posY > canvasH) {
+        if (checkCollision(player, shot)) {
+          player.hp -= 10;
+        }
+        enemyShots.splice(idx, 1);
+        shot = null;
+        delete shot;
+      }
 
-  // UI Elements
-  playerUI.drawHPBar()
-  playerUI.drawScore()
+      else {
+        shot.sprite.draw(shot.posX, shot.posY);
+        shot.moveDown();
+      }
+    });
 
-},1000/60);
+    // UI Elements
+    playerUI.drawHPBar()
+    playerUI.drawScore()
+
+  },1000/60);
+}
+
+startGame();
 
 // Player Controls
 let keysPressed = {}
@@ -351,6 +385,10 @@ window.addEventListener("keydown", event => {
         player.canShoot = true;
       },500);
     }
+  }
+
+  if (keysPressed["KeyP"]) {
+    togglePause();
   }
 });
 
