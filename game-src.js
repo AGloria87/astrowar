@@ -151,7 +151,6 @@ class Player extends Entity {
     super(sprite, posX, posY);
     this.hp = 100;
     this.score = 0;
-    this.canShoot = true;
   }
 
   shoot() {
@@ -220,22 +219,6 @@ class UI {
   }
 }
 
-function togglePause() {
-  if (!gamePaused) {
-    clearInterval(gamePlayID);
-    document.title = "AstroWar - Paused";
-    pauseModal.style.display = "block";
-    gamePaused = true;
-  }
-
-  else {
-    startGame();
-    document.title = "AstroWar - Playing"
-    pauseModal.style.display = "none";
-    gamePaused = false;
-  }
-}
-
 function checkCollision(entityA, entityB) {
   return (entityA.getBoundRight() >= entityB.posX &&
           entityA.getBoundBottom() >= entityB.posY &&
@@ -266,10 +249,12 @@ const playerUI = new UI(ctx, 40, 40);
 function startGame() {
   gamePlayID = setInterval(() => {
     if (player.hp <= 0) {
-      alert("YA PETATEO :C")
+      clearInterval(gamePlayID);
+      loseModal.style.display = "block";
     }
     if (player.score >= 2000) {
-      alert("YA GANO :D")
+      clearInterval(gamePlayID);
+      winModal.style.display = "block";
     }
 
     // Drawing logic
@@ -339,8 +324,8 @@ function startGame() {
     });
 
     // UI Elements
-    playerUI.drawHPBar()
-    playerUI.drawScore()
+    playerUI.drawHPBar();
+    playerUI.drawScore();
 
   },1000/60);
 }
@@ -378,17 +363,23 @@ window.addEventListener("keydown", event => {
   }
 
   if (keysPressed["KeyZ"]) {
-    if(player.canShoot){
-      player.shoot();
-      player.canShoot = false
-      const playersRecoil = setInterval(() => {
-        player.canShoot = true;
-      },500);
-    }
+    player.shoot();
   }
 
   if (keysPressed["KeyP"]) {
-    togglePause();
+    if (!gamePaused) {
+      clearInterval(gamePlayID);
+      document.title = "AstroWar - Paused";
+      pauseModal.style.display = "block";
+      gamePaused = true;
+    }
+
+    else {
+      startGame();
+      document.title = "AstroWar - Playing"
+      pauseModal.style.display = "none";
+      gamePaused = false;
+    }
   }
 });
 

@@ -56,7 +56,7 @@ canvas {
     background-image: url("./img/ui/background.png");
 }
 
-.menu-options li {
+.menu-options li, .menu-options-modal {
     list-style: none;
 }
 
@@ -75,12 +75,37 @@ canvas {
     margin: 30px 0;
 }
 
+.menu-options-modal {
+    display: flex;
+    align-items: center;
+    justify-content: space-evenly;
+}
+
+.menu-options-modal a {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    color: white;
+    background-color: dodgerblue;
+    width: 200px;
+    height: 50px;
+    font-size: 2em;
+    border-radius: 4px;
+    border: 6px solid midnightblue;
+    margin: 30px 0;
+}
+
 .menu-options a:hover {
     background-image: linear-gradient(#1e90ff,turquoise,dodgerblue);
     border: 1px solid white;
     box-shadow:
     0 0 2px 2px turquoise,
     0 0 6px 6px dodgerblue;
+}
+
+.menu-options-modal a:hover {
+    background-color: midnightblue;
 }
 
 /*Modals*/
