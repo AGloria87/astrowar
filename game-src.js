@@ -5,6 +5,9 @@ const canvasH = canvas.height;
 let gamePaused = false;
 let gamePlayID;
 
+let playerCanShoot = true;
+let playerRecoilID;
+
 // Modals
 const pauseModal = document.querySelector("#pause");
 const winModal = document.querySelector("#win");
@@ -44,7 +47,6 @@ const backgroundImage = {
 
 const playerShots = [];
 const enemiesA = [];
-const enemiesB = [];
 const enemyShots = [];
 
 // Player Images
@@ -274,7 +276,7 @@ function startGame() {
     playerShots.forEach((shot, idxPShot) => {
       enemiesA.forEach((enemy, idxEnemyA)=> {
         if (checkCollision(shot, enemy)) {
-          player.score += 150;
+          player.score += 100;
           enemiesA.splice(idxEnemyA, 1);
           playerShots.splice(idxPShot, 1);
         }
@@ -328,6 +330,10 @@ function startGame() {
     playerUI.drawScore();
 
   },1000/60);
+
+  playerRecoilID = setInterval(() =>{
+    playerCanShoot = true;
+  }, 200);
 }
 
 startGame();
@@ -363,12 +369,16 @@ window.addEventListener("keydown", event => {
   }
 
   if (keysPressed["KeyZ"]) {
-    player.shoot();
+    if (playerCanShoot) {
+      player.shoot();
+      playerCanShoot = false;
+    }
   }
 
   if (keysPressed["KeyP"]) {
     if (!gamePaused) {
       clearInterval(gamePlayID);
+      clearInterval(playerRecoilID);
       document.title = "AstroWar - Paused";
       pauseModal.style.display = "block";
       gamePaused = true;
