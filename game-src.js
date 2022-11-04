@@ -8,6 +8,9 @@ let gamePlayID;
 let playerCanShoot = true;
 let playerRecoilID;
 
+const shipWidth = 64;
+const shipHeight = 128;
+
 // Modals
 const pauseModal = document.querySelector("#pause");
 const winModal = document.querySelector("#win");
@@ -215,9 +218,9 @@ class UI {
 
   drawScore() {
     this.ctx.fillStyle = "white";
-    let scoreDisplay = String(player.score).padStart(3, '0')
+    let scoreDisplay = String(player.score).padStart(4, '0')
     let txt = `Score: ${scoreDisplay}`
-    this.ctx.fillText(txt, canvasW/2 + 230, this.posY + 20)
+    this.ctx.fillText(txt, canvasW/2 + 210, this.posY + 20)
   }
 }
 
@@ -231,6 +234,8 @@ function checkCollision(entityA, entityB) {
 // Enemy functions
 function spawnEnemyA() {
   let sprite = new Sprite(ctx, enemyAFrames);
+  sprite.width = shipWidth;
+  sprite.height = shipHeight;
   let enemyX = Math.floor(Math.random() * (canvasW-sprite.width));
   let enemy = new EnemyA(sprite, enemyX, -sprite.height);
   enemy.setSpeed(5);
@@ -240,6 +245,8 @@ function spawnEnemyA() {
 
 // Player Instances
 const playerSprite = new Sprite(ctx, playerFrames);
+playerSprite.width = shipWidth;
+playerSprite.height = shipHeight;
 const playerSpawnX = (canvasW - playerSprite.width) / 2;
 const playerSpawnY = playerSprite.height + 650;
 const player = new Player(playerSprite, playerSpawnX, playerSpawnY);
@@ -395,4 +402,4 @@ window.addEventListener("keydown", event => {
 
 window.addEventListener("keyup", event => {
   delete keysPressed[event.code];
-})
+});
